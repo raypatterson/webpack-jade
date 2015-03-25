@@ -8,24 +8,28 @@ var gulp = require('gulp');
 var glob = require('globby');
 var fs = require('fs-extra');
 var del = require('del');
-var traverse = require('traverse');
 
+// Magic libs
+var traverse = require('traverse');
 var JadeInheritance = require('jade-inheritance');
 
-var pages = {};
-
+// Log jammin'
 var log = require('logr.js').log('gulpfile');
 
 var logJSON = function prettyJSON(obj) {
   console.log(JSON.stringify(obj, null, 2));
-}
+};
 
+// Modest dependency map
+var pages = {};
+
+// Start Gulp tasks
 var $ = require('gulp-load-plugins')({
   camelize: true
 });
 
 gulp.task('default', function(cb) {
-  $.sequence('clean', ['build'])(cb);
+  $.sequence('clean', 'build')(cb);
 });
 
 gulp.task('build', function(cb) {
@@ -45,6 +49,7 @@ gulp.task('jade', function() {
     })
     .pipe($.tap(function(file, t) {
 
+      // Create array for page dependencies
       pages[path.relative(file.cwd, file.path)] = [];
     }))
     .pipe($.jade({
@@ -93,8 +98,11 @@ gulp.task('dependency-graph', function(cb) {
           // Get page obj
           page = pages[pagename];
 
+          // Effectively filtering out unused pages, layouts and partials
           if (page !== undefined) {
 
+            // May be safer to add in reverse order so layouts are last,
+            // but if code is modular, it shoudln't matter.
             page.unshift(filename);
           }
         }
@@ -108,8 +116,13 @@ gulp.task('dependency-graph', function(cb) {
 
       pages[pagename]
         .map(function(dependency) {
+
+          // Insert webpack magic here
           log.info('>', dependency);
         });
-    })
+    });
+
+    // Fin
+    cb();
   });
 });
