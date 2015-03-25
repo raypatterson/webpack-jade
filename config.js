@@ -10,8 +10,8 @@ module.exports = {
     dest: '.tmp',
     jade: {
       pages: 'pages',
-      layouts: 'layouts',
-      partials: 'partials'
+      layouts: 'templates/_layouts',
+      partials: 'templates/_partials'
     }
   }
 };
