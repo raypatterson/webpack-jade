@@ -3,6 +3,7 @@
 var pkg = require('./package');
 var cfg = require('./config');
 
+var path = require('path');
 var gulp = require('gulp');
 var glob = require('globby');
 var fs = require('fs-extra');
@@ -11,9 +12,13 @@ var traverse = require('traverse');
 
 var JadeInheritance = require('jade-inheritance');
 
-var log = function(ob) {
-  console.log(JSON.stringify(ob, null, 4))
-};
+var pages = {};
+
+var log = require('logr.js').log('gulpfile');
+
+var logJSON = function prettyJSON(obj) {
+  console.log(JSON.stringify(obj, null, 2));
+}
 
 var $ = require('gulp-load-plugins')({
   camelize: true
@@ -24,7 +29,7 @@ gulp.task('default', function(cb) {
 });
 
 gulp.task('build', function(cb) {
-  $.sequence(['jade'])(cb);
+  $.sequence('jade', 'dependency-graph')(cb);
 });
 
 gulp.task('clean', function(cb) {
@@ -33,7 +38,15 @@ gulp.task('clean', function(cb) {
 
 gulp.task('jade', function() {
 
-  return gulp.src([cfg.paths.jade.pages])
+  return gulp.src([
+      cfg.patterns.jade
+    ], {
+      cwd: path.join(cfg.paths.src, cfg.paths.jade.pages)
+    })
+    .pipe($.tap(function(file, t) {
+
+      pages[path.relative(file.cwd, file.path)] = [];
+    }))
     .pipe($.jade({
       pretty: true
         // , debug: true
@@ -43,43 +56,60 @@ gulp.task('jade', function() {
 
 gulp.task('dependency-graph', function(cb) {
 
+  var inheritance;
+  var filename;
+  var pagename;
+  var page;
+
   glob([
-    cfg.paths.jade.layouts,
-    cfg.paths.jade.partials
+    // TODO: Clean up. Not sure if it's better to do in two passes or nest folders?
+    path.join(cfg.paths.src, cfg.paths.jade.layouts, cfg.patterns.jade),
+    path.join(cfg.paths.src, cfg.paths.jade.partials, cfg.patterns.jade)
   ], function(err, paths) {
 
+    // What could go worng?
     if (err) {
-      console.log(err);
+      log.info(err);
     }
 
-    paths.reduce(function(list, filename) {
-      console.log('filename', filename);
+    paths.map(function(filename) {
 
-      var options = {
+      // Create dependency tree
+      inheritance = new JadeInheritance(filename, cfg.paths.src, {
         basedir: cfg.paths.src
-      };
+      });
 
-      var inheritance = new JadeInheritance(filename, cfg.paths.src, options);
-      // log('files');
-      // log(inheritance.files);
-      // log('tree');
-      // log(inheritance.tree);
+      // Normalize file name
+      filename = path.relative(cfg.paths.src, filename);
 
-      var walk = traverse(inheritance.tree);
-      var paths = walk.paths();
-      // log('paths');
-      // log(paths);
-      // log('---');
-      walk
-        .reduce(function(pageContexts, node) {
+      // Traverse tree
+      traverse(inheritance.tree).map(function(node) {
 
-          if (this.isLeaf) {
+        if (this.isLeaf) {
 
-            // log(node);
-            log(this.parent.node);
+          // Normalize path name
+          pagename = path.relative(cfg.paths.jade.pages, this.key);
+
+          // Get page obj
+          page = pages[pagename];
+
+          if (page !== undefined) {
+
+            page.unshift(filename);
           }
-        }, {});
-      log('---');
-    }, {});
+        }
+      });
+    });
+
+    // List dependencies
+    Object.keys(pages).forEach(function(pagename) {
+
+      log.info(pagename, 'dependencies:');
+
+      pages[pagename]
+        .map(function(dependency) {
+          log.info('>', dependency);
+        });
+    })
   });
 });

@@ -2,13 +2,16 @@
 
 module.exports = {
 
+  patterns: {
+    jade: '**/*.jade'
+  },
   paths: {
     src: 'source',
     dest: '.tmp',
     jade: {
-      pages: 'source/pages/**/*.jade',
-      layouts: 'source/layouts/**/*.jade',
-      partials: 'source/partials/**/*.jade'
+      pages: 'pages',
+      layouts: 'layouts',
+      partials: 'partials'
     }
   }
 };
