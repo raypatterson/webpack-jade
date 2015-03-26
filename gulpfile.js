@@ -47,6 +47,23 @@ gulp.task('jade', function() {
     ], {
       cwd: path.join(cfg.paths.src, cfg.paths.jade.pages)
     })
+    .pipe($.data(function(file, cb) {
+
+      var jsonPath = file.path.substr(0, file.path.lastIndexOf('.') + 1) + 'json';
+
+      fs.readJson(jsonPath, function(err, data) {
+
+        if (err) {
+          console.error(err);
+        }
+
+        console.log('data', data);
+
+        data.relativePath = path.relative(path.dirname(file.path), file.base);
+
+        cb(null, data);
+      });
+    }))
     .pipe($.tap(function(file, t) {
 
       // Create array for page dependencies
