@@ -53,6 +53,7 @@ gulp.task('jade', function() {
       pages[path.relative(file.cwd, file.path)] = [];
     }))
     .pipe($.jade({
+      basedir: cfg.paths.src,
       pretty: true
         // , debug: true
     }))
@@ -95,10 +96,10 @@ gulp.task('dependency-graph', function(cb) {
           // Normalize path name
           pagename = path.relative(cfg.paths.jade.pages, this.key);
 
-          // Get page obj
+          // Get page object
           page = pages[pagename];
 
-          // Effectively filtering out unused pages, layouts and partials
+          // Filter unused pages, layouts and partials
           if (page !== undefined) {
 
             // May be safer to add in reverse order so layouts are last,
