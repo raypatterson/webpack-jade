@@ -1,7 +1,7 @@
 ### TODOs
 | Filename | line # | TODO
 |:------|:------:|:------
-| gulpfile.js | 164 | Clean up. Not sure if it's better to do in two passes or nest folders?
+| gulpfile.js | 165 | Clean up. Not sure if it's better to do in two passes or nest folders?
 | index.js | 2511 | Refactor logging methods into a different object to avoid name clashes
 | index.js | 3638 | make this comparison case-insensitive on windows?
 | index.js | 4283 | defer error events consistently everywhere, not just the cb

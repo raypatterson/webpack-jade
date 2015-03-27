@@ -32,9 +32,9 @@ var dir = {
   source: 'source', // Work is done here
   project: 'app', // Project specific
   vendor: 'lib', // 3rd party
-  pages: 'app/pages', // Page specific
-  modules: 'app/modules', // Non-page specific
-  data: 'app/data', // JSON, YAML, etc.
+  pages: 'pages', // Page specific
+  modules: 'modules', // Non-page specific
+  data: 'data', // JSON, YAML, etc.
   common: 'com', // Split and bundled by webpack, only appears in 'dest' output
   temp: '.tmp', // Development target
   dist: 'dist', // Deployment target
@@ -62,13 +62,13 @@ var paths = {
     return path.join(this.source, dir.vendor);
   },
   get modules() {
-    return path.join(this.source, dir.modules);
+    return path.join(this.project, dir.modules);
   },
   get pages() {
-    return path.join(this.source, dir.pages);
+    return path.join(this.project, dir.pages);
   },
   get data() {
-    return path.join(this.source, dir.data);
+    return path.join(this.project, dir.data);
   },
   get jade() {
     // XXX: Do these paths  need underscores? Is this aesthetic or can be used at a filter pattern?

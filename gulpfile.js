@@ -119,12 +119,12 @@ gulp.task('jade', function() {
           logger.error(err);
         }
 
-        logger.debug('cfg.data.global', cfg.data.global);
-        logger.debug('pageData', pageData);
+        // logger.debug('cfg.data.global', cfg.data.global);
+        // logger.debug('pageData', pageData);
 
         var delta = jsondiffpatch.diff(cfg.data.global, pageData);
 
-        logger.log('delta', jsondiffpatch.formatters.annotated.format(delta));
+        // logger.log('delta', jsondiffpatch.formatters.annotated.format(delta));
 
         pageData.relativePath = path.relative(path.dirname(file.path), file.base);
         if (pageData.relativePath === '') {
@@ -154,9 +154,10 @@ gulp.task('jade', function() {
 
 gulp.task('dependency-graph', function(cb) {
 
+  var basedir = cfg.paths.project;
   var inheritance;
-  var filename;
-  var pagename;
+  var fileName;
+  var pageName;
   var page;
 
   glob(
@@ -172,15 +173,15 @@ gulp.task('dependency-graph', function(cb) {
         log.info(err);
       }
 
-      paths.map(function(filename) {
+      paths.map(function(fileName) {
 
         // Create dependency tree
-        inheritance = new JadeInheritance(filename, cfg.paths.project, {
-          basedir: cfg.paths.project
+        inheritance = new JadeInheritance(fileName, basedir, {
+          basedir: basedir
         });
 
         // Normalize file name
-        filename = path.relative(cfg.paths.project, filename);
+        fileName = path.relative(cfg.paths.project, fileName);
 
         // Traverse tree
         traverse(inheritance.tree)
@@ -189,17 +190,17 @@ gulp.task('dependency-graph', function(cb) {
             if (this.isLeaf) {
 
               // Normalize path name
-              pagename = path.relative(cfg.paths.pages, this.key);
+              pageName = path.relative(cfg.dir.pages, this.key);
 
               // Get page object
-              page = pages[pagename];
+              page = pages[pageName];
 
               // Filter unused pages, layouts and partials
               if (page !== undefined) {
 
                 // May be safer to add in reverse order so layouts are last,
                 // but if code is modular, it shoudln't matter.
-                page.unshift(filename);
+                page.unshift(fileName);
               }
             }
           });
@@ -207,11 +208,11 @@ gulp.task('dependency-graph', function(cb) {
 
       // List dependencies
       Object.keys(pages)
-        .forEach(function(pagename) {
+        .forEach(function(pageName) {
 
-          logger.info(pagename, 'dependencies:');
+          logger.info(pageName, 'dependencies:');
 
-          pages[pagename]
+          pages[pageName]
             .map(function(dependency) {
 
               // Insert webpack magic here
