@@ -17,8 +17,8 @@ var ignore = rek('utils/glob')
 
 var logger = rek('utils/log/server')('webpack');
 
-var BUNDLE_FILENAMES = ['js', 'css'].reduce(function(o, i) {
-  o[i] = ['index', i].join('.');
+var BUNDLE = ['js', 'css'].reduce(function(o, i) {
+  o[i] = path.join('[name]', ['index', i].join('.'));
   return o;
 }, {});
 
@@ -49,10 +49,10 @@ var plugins = [
   new webpack.optimize.OccurenceOrderPlugin(true),
   new webpack.optimize.CommonsChunkPlugin({
     name: cfg.dir.common,
-    filename: '[name]/' + BUNDLE_FILENAMES.js,
+    filename: BUNDLE.js,
     chunks: chunks
   }),
-  new ExtractTextPlugin(path.join('[name]', BUNDLE_FILENAMES.css), {
+  new ExtractTextPlugin(BUNDLE.css, {
     allChunks: true
   })
 ];
@@ -78,6 +78,6 @@ module.exports = {
   plugins: plugins,
   output: {
     path: cfg.paths.dest,
-    filename: path.join('[name]', BUNDLE_FILENAMES.js)
+    filename: BUNDLE.js
   }
 };
