@@ -15,19 +15,17 @@ var JadeInheritance = require('jade-inheritance');
 var jsdiff = require('jsdiff');
 var jsondiffpatch = require('jsondiffpatch');
 
-
 var pkg = rek('package');
 var cfg = rek('config');
 var wpk = rek('config.webpack');
-var logger = rek('dev/utils/log')('gulpfile');
-var ignore = rek('dev/utils/glob')
+var logger = rek('utils/log/server')('gulpfile');
+var patterns = rek('utils/glob')
+  .patterns;
+var ignore = rek('utils/glob')
   .ignore;
 
 // Modest dependency map
 var pages = {};
-
-// Project specific, common data
-var globalData = require(cfg.paths.data.global);
 
 // Batch import 'gulp-*' tasks packages
 var $ = require('gulp-load-plugins')({
@@ -50,24 +48,26 @@ gulp.task('default', function(cb) {
 gulp.task('beautify', function() {
   gulp.src(
     [
-      cfg.patterns.js
+      patterns.js
     ], {
-        cwd: cfg.paths.source
+        cwd: cfg.paths.project
       })
     .pipe($.beautify())
-    .pipe(gulp.dest(cfg.paths.source));
+    .pipe(gulp.dest(cfg.paths.project));
 });
 
 gulp.task('todo', function() {
 
   gulp.src(
     [
-      cfg.patterns.js,
-      cfg.patterns.css,
-      cfg.patterns.sass,
-      cfg.patterns.html,
-      cfg.patterns.jade,
-      ignore(cfg.paths.node, cfg.patterns.all)
+      patterns.js,
+      patterns.css,
+      patterns.sass,
+      patterns.html,
+      patterns.jade,
+      ignore(cfg.paths.package.node, patterns.all),
+      ignore(cfg.paths.package.bower, patterns.all),
+      ignore(cfg.paths.vendor, patterns.all)
     ], {
         cwd: cfg.paths.root
       })
@@ -85,9 +85,9 @@ gulp.task('clean', function(cb) {
 gulp.task('copy', function(cb) {
   return gulp.src(
     [
-      cfg.patterns.json
+      patterns.json
     ], {
-        cwd: path.join(cfg.paths.source, cfg.paths.pages)
+        cwd: cfg.paths.pages
       })
     .pipe(gulp.dest(cfg.paths.dest));
 });
@@ -104,9 +104,9 @@ gulp.task('jade', function() {
 
   return gulp.src(
     [
-      cfg.patterns.jade
+      patterns.jade
     ], {
-        cwd: path.join(cfg.paths.source, cfg.paths.pages)
+        cwd: cfg.paths.pages
       })
     .pipe($.data(function(file, cb) {
 
@@ -119,19 +119,19 @@ gulp.task('jade', function() {
           logger.error(err);
         }
 
-        logger.debug('globalData', globalData);
+        logger.debug('cfg.data.global', cfg.data.global);
         logger.debug('pageData', pageData);
 
-        var delta = jsondiffpatch.diff(globalData, pageData);
+        var delta = jsondiffpatch.diff(cfg.data.global, pageData);
 
         logger.log('delta', jsondiffpatch.formatters.annotated.format(delta));
 
         pageData.relativePath =
           path.relative(path.dirname(file.path), file.base);
         pageData.title = [
-          globalData.page.title.prefix,
+          cfg.data.global.page.title.prefix,
           pageData.title
-          ].join(globalData.page.title.delimiter);
+        ].join(cfg.data.global.page.title.delimiter);
 
         cb(null, pageData);
       });
@@ -142,7 +142,7 @@ gulp.task('jade', function() {
       pages[path.relative(file.cwd, file.path)] = [];
     }))
     .pipe($.jade({
-      basedir: cfg.paths.source,
+      basedir: cfg.paths.project,
       pretty: true
         // , debug: true
     }))
@@ -159,8 +159,8 @@ gulp.task('dependency-graph', function(cb) {
   glob(
     [
       // TODO: Clean up. Not sure if it's better to do in two passes or nest folders?
-      path.join(cfg.paths.source, cfg.paths.jade.layouts, cfg.patterns.jade),
-      path.join(cfg.paths.source, cfg.paths.jade.partials, cfg.patterns.jade)
+      path.join(cfg.paths.jade.layouts, patterns.jade),
+      path.join(cfg.paths.jade.partials, patterns.jade)
     ],
     function(err, paths) {
 
@@ -172,12 +172,12 @@ gulp.task('dependency-graph', function(cb) {
       paths.map(function(filename) {
 
         // Create dependency tree
-        inheritance = new JadeInheritance(filename, cfg.paths.source, {
-          basedir: cfg.paths.source
+        inheritance = new JadeInheritance(filename, cfg.paths.project, {
+          basedir: cfg.paths.project
         });
 
         // Normalize file name
-        filename = path.relative(cfg.paths.source, filename);
+        filename = path.relative(cfg.paths.project, filename);
 
         // Traverse tree
         traverse(inheritance.tree)
@@ -223,14 +223,11 @@ gulp.task('dependency-graph', function(cb) {
 
 gulp.task('webpack', function(cb) {
 
-  // var cwd = path.join(cfg.paths.source);
-  var cwd = path.join(cfg.paths.source, cfg.paths.pages);
-
   return gulp.src(
       [
-        cfg.patterns.js
+        patterns.js
       ], {
-        cwd: cwd
+        cwd: cfg.paths.source
       })
     .pipe($.webpack(wpk, webpack))
     .pipe(gulp.dest(cfg.paths.dest));
@@ -257,10 +254,10 @@ gulp.task('server', function() {
 
   gulp.watch(
       [
-        cfg.patterns.js,
-        cfg.patterns.sass,
-        cfg.patterns.jade,
-        cfg.patterns.json
+        patterns.js,
+        patterns.sass,
+        patterns.jade,
+        patterns.json
       ], {
         cwd: cfg.paths.source
       }, [

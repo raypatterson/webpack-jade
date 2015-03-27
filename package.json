@@ -28,6 +28,7 @@
     "rekuire": "^0.1.9",
     "traverse": "^0.6.6",
     "webpack": "^1.7.3",
-    "winston": "^0.9.0"
+    "winston": "^0.9.0",
+    "yargs": "^3.6.0"
   }
 }

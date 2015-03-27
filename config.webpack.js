@@ -10,48 +10,45 @@ var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
 var cfg = rek('config');
 
-var logger = rek('dev/utils/log')('webpack');
+var patterns = rek('utils/glob')
+  .patterns;
+var ignore = rek('utils/glob')
+  .ignore;
+
+var logger = rek('utils/log/server')('webpack');
 
 var BUNDLE_FILENAMES = ['js', 'css'].reduce(function(o, i) {
   o[i] = ['index', i].join('.');
   return o;
 }, {});
 
-// Construct paths
-var appPath = path.join(cfg.paths.source, cfg.paths.app);
-var pagesPath = path.join(appPath, cfg.paths.pages);
-
-// Glob entry points from 'pages' dir
-// TODO: Clean up entry creation
+// Create entry points
 var entry = {};
 var chunks = [];
 var entryName;
 
-var entry = glob.sync(
-[
-  cfg.patterns.js
-], {
-      // cwd: pagesPath
-      cwd: cfg.paths.source
-    }
-  )
-  .reduce(function(obj, filePath) {
-    var entryName = path.dirname(filePath);
-    obj[entryName] = filePath;
+// Create 'pages' entry points
+var cwd = cfg.paths.pages;
+var entry = glob.sync([patterns.js], {
+    cwd: cwd
+  })
+  .reduce(function(obj, entryPath) {
+    entryName = path.dirname(entryPath);
+    obj[entryName] = path.join(cwd, entryPath);
     chunks.push(entryName);
-
-    logger.debug('filePath', filePath);
-    logger.debug('entryName', entryName);
     return obj;
   }, {});
 
-logger.debug('entry', entry);
+// Add 'vendor' entry point
+entryName = cfg.dir.vendor;
+chunks.push(entryName);
+entry[entryName] = cfg.paths.vendor;
 
 // Add plugins
 var plugins = [
   new webpack.optimize.OccurenceOrderPlugin(true),
   new webpack.optimize.CommonsChunkPlugin({
-    name: cfg.paths.common,
+    name: cfg.dir.common,
     filename: '[name]/' + BUNDLE_FILENAMES.js,
     chunks: chunks
   }),
@@ -61,29 +58,26 @@ var plugins = [
 ];
 
 var modulesDirectories = [
-  appPath,
-  cfg.paths.node,
-  cfg.paths.bower
+  cfg.paths.source,
+  cfg.paths.package.node,
+  cfg.paths.package.bower,
+  cfg.paths.utils
 ];
-
-logger.debug('appPath', appPath);
-logger.debug('pagesPath', pagesPath);
-logger.debug('entry', entry);
-logger.debug('chunks', chunks);
 
 module.exports = {
   debug: true,
   devtool: '#inline-source-map',
   src: [
-    cfg.patterns.js
+    patterns.js
   ],
   resolve: {
     modulesDirectories: modulesDirectories
   },
+  context: cfg.paths.source,
   entry: entry,
   plugins: plugins,
   output: {
-    path: path.join(cfg.paths.root, cfg.paths.dest),
+    path: cfg.paths.dest,
     filename: path.join('[name]', BUNDLE_FILENAMES.js)
   }
 };
