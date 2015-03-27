@@ -3,13 +3,28 @@
 module.exports = {
 
   patterns: {
-    jade: '**/*.jade'
+    all: '**/*',
+    js: '**/*.js',
+    css: '**/*.css',
+    json: '**/*.json',
+    jade: '**/*.jade',
+    html: '**/*.html',
+    sass: '**/*.{scss,sass}'
   },
   paths: {
-    src: 'source',
-    dest: '.tmp',
+    root: __dirname,
+    common: 'common',
+    vendor: 'vendor',
+    source: 'source',
+    app: '',
+    pages: 'pages',
+    dest: './.tmp',
+    node: 'node_modules',
+    bower: 'bower_components',
+    data: {
+      global: './source/data/global.json'
+    },
     jade: {
-      pages: 'pages',
       layouts: 'templates/_layouts',
       partials: 'templates/_partials'
     }

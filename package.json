@@ -2,20 +2,32 @@
   "name": "webpack-jade",
   "version": "1.0.0",
   "main": "gulp",
+  "description": "The marriage of Jade & webpack",
+  "repository": "https://github.com/raypatterson/webpack-jade",
   "devDependencies": {
     "browser-sync": "^2.4.0",
     "del": "^1.1.1",
+    "extract-text-webpack-plugin": "^0.5.0",
     "fs-extra": "^0.16.5",
     "globby": "^1.2.0",
     "gulp": "^3.8.11",
+    "gulp-beautify": "^1.1.2",
     "gulp-data": "^1.2.0",
     "gulp-jade": "^1.0.0",
     "gulp-load-plugins": "^0.9.0",
     "gulp-rename": "^1.2.0",
     "gulp-sequence": "^0.3.2",
     "gulp-tap": "^0.1.3",
+    "gulp-todo": "^2.5.1",
+    "gulp-webpack": "^1.3.0",
+    "html-webpack-plugin": "^1.1.0",
     "jade-inheritance": "^0.1.0",
+    "jsdiff": "^1.1.1",
+    "jsondiffpatch": "^0.1.31",
     "logr.js": "^0.2.1",
-    "traverse": "^0.6.6"
+    "rekuire": "^0.1.9",
+    "traverse": "^0.6.6",
+    "webpack": "^1.7.3",
+    "winston": "^0.9.0"
   }
 }

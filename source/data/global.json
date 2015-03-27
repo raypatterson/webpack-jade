@@ -1,0 +1,25 @@
+{
+  "page": {
+    "title": {
+      "prefix": "Jadepack",
+      "delimiter": " | "
+    }
+  },
+
+  "deeply": {
+    "nested": {
+      "object": {
+        "patch": "can be patched",
+        "override": "can be overidden"
+      },
+      "array": [
+        {
+          "patch": "can be patched"
+        },
+        {
+          "override": "can be overidden"
+        }
+      ]
+    }
+  }
+}
