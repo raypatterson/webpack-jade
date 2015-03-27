@@ -126,8 +126,11 @@ gulp.task('jade', function() {
 
         logger.log('delta', jsondiffpatch.formatters.annotated.format(delta));
 
-        pageData.relativePath =
-          path.relative(path.dirname(file.path), file.base);
+        pageData.relativePath = path.relative(path.dirname(file.path), file.base);
+        if (pageData.relativePath === '') {
+          pageData.relativePath = '.';
+        }
+
         pageData.title = [
           cfg.data.global.page.title.prefix,
           pageData.title
