@@ -5,6 +5,7 @@
   "description": "The marriage of Jade & webpack",
   "repository": "https://github.com/raypatterson/webpack-jade",
   "devDependencies": {
+    "app-root-path": "^1.0.0",
     "browser-sync": "^2.4.0",
     "del": "^1.1.1",
     "extract-text-webpack-plugin": "^0.5.0",
@@ -26,6 +27,7 @@
     "jsondiffpatch": "^0.1.31",
     "logr.js": "^0.2.1",
     "rekuire": "^0.1.9",
+    "require-directory": "^2.1.0",
     "traverse": "^0.6.6",
     "webpack": "^1.7.3",
     "winston": "^0.9.0",

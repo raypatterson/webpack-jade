@@ -12,26 +12,28 @@ var webpack = require('webpack');
 // Magic libs
 var traverse = require('traverse');
 var JadeInheritance = require('jade-inheritance');
+
+// TODO: Pick one diff/patch lib for template config overrides and includes
 var jsdiff = require('jsdiff');
 var jsondiffpatch = require('jsondiffpatch');
 
-var pkg = rek('package');
-var cfg = rek('config');
-var wpk = rek('config.webpack');
+// Utils
 var logger = rek('utils/log/server')('gulpfile');
 var patterns = rek('utils/glob')
   .patterns;
 var ignore = rek('utils/glob')
   .ignore;
 
-// Modest dependency map
-var pages = {};
+// Configs
+var pkg = rek('package');
+var cfg = require('require-directory')(module, './configs'); // Recursively require all configs
 
 // Batch import 'gulp-*' tasks packages
 var $ = require('gulp-load-plugins')({
   camelize: true
 });
 
+// Sequences
 gulp.task('default', function(cb) {
   $.sequence(
     [
@@ -45,15 +47,19 @@ gulp.task('default', function(cb) {
   )(cb);
 });
 
+// Tasks
+
+// TODO: Move tasks into separate files & sort out interdependencies between Jade & webpack
+
 gulp.task('beautify', function() {
   gulp.src(
     [
       patterns.js
     ], {
-        cwd: cfg.paths.project
+        cwd: cfg.common.paths.project
       })
     .pipe($.beautify())
-    .pipe(gulp.dest(cfg.paths.project));
+    .pipe(gulp.dest(cfg.common.paths.project));
 });
 
 gulp.task('todo', function() {
@@ -65,20 +71,22 @@ gulp.task('todo', function() {
       patterns.sass,
       patterns.html,
       patterns.jade,
-      ignore(cfg.paths.package.node, patterns.all),
-      ignore(cfg.paths.package.bower, patterns.all),
-      ignore(cfg.paths.vendor, patterns.all)
+      ignore(cfg.common.paths.package.node, patterns.all),
+      ignore(cfg.common.paths.package.bower, patterns.all),
+      ignore(cfg.common.paths.vendor, patterns.all)
     ], {
-        cwd: cfg.paths.root
+        cwd: cfg.common.paths.root
       })
-    .pipe($.todo())
-    .pipe(gulp.dest(cfg.paths.root));
+    .pipe($.todo({
+      verbose: true
+    }))
+    .pipe(gulp.dest(cfg.common.paths.root));
 });
 
 gulp.task('clean', function(cb) {
   del(
     [
-      cfg.paths.dest
+      cfg.common.paths.dest
     ], cb);
 });
 
@@ -87,9 +95,9 @@ gulp.task('copy', function(cb) {
     [
       patterns.json
     ], {
-        cwd: cfg.paths.pages
+        cwd: cfg.common.paths.pages
       })
-    .pipe(gulp.dest(cfg.paths.dest));
+    .pipe(gulp.dest(cfg.common.paths.dest));
 });
 
 gulp.task('build', function(cb) {
@@ -100,13 +108,18 @@ gulp.task('build', function(cb) {
   )(cb);
 });
 
+/* Begin: Jade Tasks */
+
+// Modest dependency map
+var pages = {};
+
 gulp.task('jade', function() {
 
   return gulp.src(
     [
       patterns.jade
     ], {
-        cwd: cfg.paths.pages
+        cwd: cfg.common.paths.pages
       })
     .pipe($.data(function(file, cb) {
 
@@ -119,10 +132,10 @@ gulp.task('jade', function() {
           logger.error(err);
         }
 
-        // logger.debug('cfg.data.global', cfg.data.global);
+        // logger.debug('cfg.common.data.global', cfg.common.data.global);
         // logger.debug('pageData', pageData);
 
-        var delta = jsondiffpatch.diff(cfg.data.global, pageData);
+        var delta = jsondiffpatch.diff(cfg.common.data.global, pageData);
 
         // logger.log('delta', jsondiffpatch.formatters.annotated.format(delta));
 
@@ -132,9 +145,9 @@ gulp.task('jade', function() {
         }
 
         pageData.title = [
-          cfg.data.global.page.title.prefix,
+          cfg.common.data.global.page.title.prefix,
           pageData.title
-        ].join(cfg.data.global.page.title.delimiter);
+        ].join(cfg.common.data.global.page.title.delimiter);
 
         cb(null, pageData);
       });
@@ -145,16 +158,16 @@ gulp.task('jade', function() {
       pages[path.relative(file.cwd, file.path)] = [];
     }))
     .pipe($.jade({
-      basedir: cfg.paths.project,
+      basedir: cfg.common.paths.project,
       pretty: true
         // , debug: true
     }))
-    .pipe(gulp.dest(cfg.paths.dest));
+    .pipe(gulp.dest(cfg.common.paths.dest));
 });
 
 gulp.task('dependency-graph', function(cb) {
 
-  var basedir = cfg.paths.project;
+  var basedir = cfg.common.paths.project;
   var inheritance;
   var fileName;
   var pageName;
@@ -163,8 +176,8 @@ gulp.task('dependency-graph', function(cb) {
   glob(
     [
       // TODO: Clean up. Not sure if it's better to do in two passes or nest folders?
-      path.join(cfg.paths.jade.layouts, patterns.jade),
-      path.join(cfg.paths.jade.partials, patterns.jade)
+      path.join(cfg.common.paths.jade.layouts, patterns.jade),
+      path.join(cfg.common.paths.jade.partials, patterns.jade)
     ],
     function(err, paths) {
 
@@ -181,7 +194,7 @@ gulp.task('dependency-graph', function(cb) {
         });
 
         // Normalize file name
-        fileName = path.relative(cfg.paths.project, fileName);
+        fileName = path.relative(cfg.common.paths.project, fileName);
 
         // Traverse tree
         traverse(inheritance.tree)
@@ -190,7 +203,7 @@ gulp.task('dependency-graph', function(cb) {
             if (this.isLeaf) {
 
               // Normalize path name
-              pageName = path.relative(cfg.dir.pages, this.key);
+              pageName = path.relative(cfg.common.dir.pages, this.key);
 
               // Get page object
               page = pages[pageName];
@@ -225,16 +238,18 @@ gulp.task('dependency-graph', function(cb) {
     });
 });
 
+/* End: Jade Tasks */
+
 gulp.task('webpack', function(cb) {
 
   return gulp.src(
       [
         patterns.js
       ], {
-        cwd: cfg.paths.source
+        cwd: cfg.common.paths.source
       })
-    .pipe($.webpack(wpk, webpack))
-    .pipe(gulp.dest(cfg.paths.dest));
+    .pipe($.webpack(cfg.tasks.webpack, webpack))
+    .pipe(gulp.dest(cfg.common.paths.dest));
 });
 
 // Server
@@ -245,8 +260,8 @@ gulp.task('server', function() {
     notify: false,
     logPrefix: 'server',
     server: [
-      cfg.paths.dest,
-      cfg.paths.source
+      cfg.common.paths.dest,
+      cfg.common.paths.source
     ]
   });
 
@@ -263,7 +278,7 @@ gulp.task('server', function() {
         patterns.jade,
         patterns.json
       ], {
-        cwd: cfg.paths.source
+        cwd: cfg.common.paths.source
       }, [
         'build',
         bs.reload

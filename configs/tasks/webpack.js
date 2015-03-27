@@ -8,14 +8,15 @@ var webpack = require('webpack');
 var HtmlWebpackPlugin = require('html-webpack-plugin');
 var ExtractTextPlugin = require('extract-text-webpack-plugin');
 
-var cfg = rek('config');
-
+// Utils
+var logger = rek('utils/log/server')('webpack');
 var patterns = rek('utils/glob')
   .patterns;
 var ignore = rek('utils/glob')
   .ignore;
 
-var logger = rek('utils/log/server')('webpack');
+// Config
+var cfg = rek('configs/common');
 
 var BUNDLE = ['js', 'css'].reduce(function(o, i) {
   o[i] = path.join('[name]', ['index', i].join('.'));

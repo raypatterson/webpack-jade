@@ -2,6 +2,8 @@
 
 var rek = require('rekuire');
 var path = require('path');
+var root = require('app-root-path')
+  .path;
 var args = require('yargs')
   .argv;
 
@@ -45,7 +47,7 @@ var dir = {
 
 // Absolute paths
 var paths = {
-  root: __dirname,
+  root: root,
   get utils() {
     return path.join(this.root, dir.utils);
   },
@@ -91,6 +93,6 @@ module.exports = {
   dir: dir,
   paths: paths,
   data: {
-    global: rek(path.join(paths.data, 'global.json'))
+    global: rek(path.join(dir.source, dir.project, dir.data, 'global.json')) // FIXME: This isn't very pretty. Should be treated the same as the task configs?
   }
 };
