@@ -1,0 +1,18 @@
+#!/bin/bash
+# Should install all dependencies
+
+echo "Install global Node packages"
+
+npm i -g gulp bower
+
+echo "Install local Node packages"
+
+npm i
+
+echo "Install Bower componenents"
+
+bower i
+
+echo "Start gulp"
+
+gulp
